@@ -1,0 +1,86 @@
+CREATE DATABASE shop;
+CREATE TABLE IF NOT EXISTS category(
+    _id TEXT PRIMARY KEY,
+    category TEXT
+);
+CREATE TABLE IF NOT EXISTS userpermission(
+    _id TEXT PRIMARY KEY,
+    userpermission TEXT 
+);
+CREATE TABLE IF NOT EXISTS client(
+    _id TEXT PRIMARY KEY,
+    clientname TEXT,
+    clientpass TEXT,
+    fullname TEXT,
+    email TEXT,
+    id_userpermission TEXT REFERENCES userpermission (_id)
+);
+CREATE TABLE IF NOT EXISTS product(
+    _id TEXT PRIMARY KEY,
+    name_product TEXT,
+    price_product TEXT,
+    image TEXT,
+    describe TEXT,
+    number NUMERIC,
+    id_category TEXT REFERENCES category (_id)
+);
+CREATE TABLE IF NOT EXISTS favorite(
+    _id TEXT PRIMARY KEY,
+    id_client TEXT REFERENCES client (_id),
+    id_product TEXT REFERENCES product (_id)
+);
+CREATE TABLE IF NOT EXISTS sale (
+    id_sale TEXT PRIMARY KEY,
+    promotion NUMERIC,
+    describe TEXT,
+    status BOOLEAN,
+    startdate timestamptz,
+    enddate timestamptz,
+    id_product TEXT REFERENCES product (_id)
+);
+CREATE TABLE IF NOT EXISTS coupon (
+    _id TEXT PRIMARY KEY,
+    code TEXT,
+    count NUMERIC,
+    promotion NUMERIC,
+    describe TEXT
+);
+CREATE TABLE IF NOT EXISTS payment(
+    _id TEXT PRIMARY KEY,
+    pay_name TEXT 
+);
+
+CREATE TABLE IF NOT EXISTS note (
+    _id TEXT PRIMARY KEY,
+    fullname TEXT,
+    phone TEXT 
+);
+CREATE TABLE IF NOT EXISTS orders(
+    _id TEXT PRIMARY KEY,
+    address TEXT,
+    totalvalue NUMERIC,
+    status TEXT,
+    pay BOOLEAN,
+    feeship NUMERIC,
+    create_time TEXT,
+    id_client TEXT REFERENCES client (_id),
+    id_payment TEXT REFERENCES payment (_id),
+    id_note TEXT REFERENCES note (_id),
+    id_coupon TEXT REFERENCES coupon (_id)
+);
+CREATE TABLE IF NOT EXISTS detail_orders (
+    _id TEXT PRIMARY KEY,
+    price_product TEXT,
+    name_product TEXT,
+    count NUMERIC,
+    size TEXT,
+    id_orders TEXT REFERENCES orders (_id),
+    id_product TEXT REFERENCES product (_id)
+);
+CREATE TABLE IF NOT EXISTS review(
+    _id TEXT PRIMARY KEY,
+    content TEXT,
+    star TEXT,
+    id_client TEXT REFERENCES client (_id),
+    id_product TEXT REFERENCES product (_id)
+);

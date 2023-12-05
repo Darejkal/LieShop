@@ -1,0 +1,85 @@
+services:
+  db:
+    image: postgres:14.10-bookworm
+    environment:
+      POSTGRES_PASSWORD: somePassword 
+    ports:
+    - 5432:5432
+    volumes: 
+    - db:/var/lib/postgresql/data
+    - ./db/db-init.psql:/docker-entrypoint-initdb.d/db-init.sql
+    - ./db/db-init.sh:/docker-entrypoint-initdb.d/db-init.sh
+    restart: always
+    healthcheck:
+      test: ['CMD','su','postgres','-c', 'pg_isready','']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  superdb:
+    image: postgres:14.10-bookworm
+    environment:
+      POSTGRES_USER: supertokens_user 
+      POSTGRES_PASSWORD: somePassword 
+      POSTGRES_DB: supertokens
+    ports:
+      - 5433:5432
+    volumes: 
+    - superdb:/var/lib/postgresql/data  
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'supertokens_user', '-d', 'supertokens']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  # nextjs:
+  #   image: nextjs:latest
+  #   container_name: nextjs
+  #   ports:
+  #     - "3000:3000"
+  #   restart: always
+  # proxy:
+  #   image: nginx:latest
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - /etc/ssl:/etc/nginx/ssl:ro
+  #     - /proxy/nginx.conf:/etc/nginx/nginx.conf
+  #   restart: always
+  supertoken:
+    image: registry.supertokens.io/supertokens/supertokens-postgresql:7.0
+    environment:
+      POSTGRESQL_CONNECTION_URI: "postgresql://supertokens_user:somePassword@0.0.0.0:5433/supertokens"
+    # ports:
+    # - 3567:3567
+    network_mode: "host"
+    restart: always
+    healthcheck:
+      test: >
+        bash -c 'exec 3<>/dev/tcp/127.0.0.1/3567 && echo -e "GET /hello HTTP/1.1\r\nhost: 127.0.0.1:3567\r\nConnection: close\r\n\r\n" >&3 && cat <&3 | grep "Hello"'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+    - superdb
+  # redpanda:
+  #   image: docker.redpanda.com/vectorized/redpanda:v22.2.2
+  #   command:
+  #     - redpanda start
+  #     - --smp 1
+  #     - --overprovisioned
+  #     - --node-id 0
+  #     - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+  #     - --advertise-kafka-addr PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+  #     - --pandaproxy-addr 0.0.0.0:8082
+  #     - --advertise-pandaproxy-addr localhost:8082
+  #   expose:
+  #     - 8081
+  #     - 8082
+  #     - 9092
+  #     - 9644
+  #     - 29092
+volumes:
+  db:
+  superdb:
